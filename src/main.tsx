@@ -8,6 +8,7 @@ import { StyledEngineProvider } from '@mui/material/styles'
 import theme from './theme'
 import App from './App'
 import './index.css'
+import './styles/globals.css'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
@@ -21,4 +22,4 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
       </BrowserRouter>
     </StyledEngineProvider>
   </React.StrictMode>
-) 
+)

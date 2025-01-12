@@ -8,7 +8,7 @@ const popularDestinations = [
     id: 1,
     name: 'İstanbul',
     image: 'https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
-    description: 'Tarihi yarımada ve Boğaz manzarası',
+    description: 'Tarihi yarımadaa ve Boğaz manzarası',
     properties: 254
   },
   {

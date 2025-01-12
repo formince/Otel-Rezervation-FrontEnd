@@ -33,6 +33,29 @@ import {
   Close as CloseIcon,
 } from '@mui/icons-material'
 
+import React from 'react';
+import { 
+  BarChart, 
+  Bar, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  Legend, 
+  PieChart, 
+  Pie, 
+  Cell, 
+  LineChart, 
+  Line, 
+  ResponsiveContainer 
+} from 'recharts';
+import { 
+  HotelIcon, 
+  UsersIcon, 
+  DollarSignIcon, 
+  ActivityIcon 
+} from 'lucide-react';
+
 // Mock data for demonstration
 const mockUsers = [
   {
@@ -77,6 +100,42 @@ const mockPendingHotels = [
   },
 ]
 
+// Mock data for charts
+const hotelData = [
+  { name: 'Ocak', oteller: 40 },
+  { name: 'Şubat', oteller: 30 },
+  { name: 'Mart', oteller: 50 },
+  { name: 'Nisan', oteller: 45 },
+  { name: 'Mayıs', oteller: 60 },
+  { name: 'Haziran', oteller: 55 },
+];
+
+const userData = [
+  { name: 'Ocak', kullanıcılar: 400 },
+  { name: 'Şubat', kullanıcılar: 300 },
+  { name: 'Mart', kullanıcılar: 500 },
+  { name: 'Nisan', kullanıcılar: 450 },
+  { name: 'Mayıs', kullanıcılar: 600 },
+  { name: 'Haziran', kullanıcılar: 550 },
+];
+
+const gelirData = [
+  { name: 'Ocak', gelir: 4000 },
+  { name: 'Şubat', gelir: 3000 },
+  { name: 'Mart', gelir: 5000 },
+  { name: 'Nisan', gelir: 4500 },
+  { name: 'Mayıs', gelir: 6000 },
+  { name: 'Haziran', gelir: 5500 },
+];
+
+const otelStatusData = [
+  { name: 'Aktif', value: 400 },
+  { name: 'Askıda', value: 300 },
+  { name: 'Beklemede', value: 300 },
+];
+
+const COLORS = ['#0088FE', '#00C49F', '#FFBB28'];
+
 const AdminPanel = () => {
   const [users, setUsers] = useState(mockUsers)
   const [pendingHotels, setPendingHotels] = useState(mockPendingHotels)
@@ -104,132 +163,101 @@ const AdminPanel = () => {
     <Container maxWidth="lg" sx={{ py: 4 }}>
       <Grid container spacing={4}>
         {/* User Management Section */}
-        <Grid item xs={12}>
-          <Paper>
-            <Box sx={{ p: 3 }}>
-              <Typography variant="h5" gutterBottom>
-                User Management
-              </Typography>
-              <TableContainer>
-                <Table>
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>Name</TableCell>
-                      <TableCell>Email</TableCell>
-                      <TableCell>Role</TableCell>
-                      <TableCell>Status</TableCell>
-                      <TableCell align="right">Actions</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {users.map((user) => (
-                      <TableRow key={user.id}>
-                        <TableCell>{user.name}</TableCell>
-                        <TableCell>{user.email}</TableCell>
-                        <TableCell>
-                          <Chip
-                            label={user.role.replace('_', ' ')}
-                            color={
-                              user.role === 'admin'
-                                ? 'error'
-                                : user.role === 'hotel_owner'
-                                ? 'warning'
-                                : 'default'
-                            }
-                            size="small"
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <Chip
-                            label={user.status}
-                            color={user.status === 'active' ? 'success' : 'default'}
-                            size="small"
-                          />
-                        </TableCell>
-                        <TableCell align="right">
-                          <IconButton
-                            color="primary"
-                            onClick={() => handleEditUser(user.id)}
-                          >
-                            <EditIcon />
-                          </IconButton>
-                          <IconButton color="error">
-                            <DeleteIcon />
-                          </IconButton>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            </Box>
-          </Paper>
-        </Grid>
+        
 
-        {/* Hotel Approvals Section */}
+        
+
+        {/* Dashboard Section */}
         <Grid item xs={12}>
-          <Paper>
-            <Box sx={{ p: 3 }}>
-              <Typography variant="h5" gutterBottom>
-                Pending Hotel Approvals
-              </Typography>
-              <Grid container spacing={3}>
-                {pendingHotels.map((hotel) => (
-                  <Grid item xs={12} md={6} key={hotel.id}>
-                    <Card>
-                      <CardContent>
-                        <Typography variant="h6" gutterBottom>
-                          {hotel.name}
-                        </Typography>
-                        <Typography
-                          variant="body2"
-                          color="text.secondary"
-                          gutterBottom
-                        >
-                          Owner: {hotel.owner}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          Location: {hotel.location}
-                        </Typography>
-                        <Typography
-                          variant="body2"
-                          color="text.secondary"
-                          gutterBottom
-                        >
-                          Submitted: {hotel.submittedDate}
-                        </Typography>
-                        <Box
-                          sx={{
-                            display: 'flex',
-                            justifyContent: 'flex-end',
-                            gap: 1,
-                            mt: 2,
-                          }}
-                        >
-                          <Button
-                            variant="outlined"
-                            color="error"
-                            startIcon={<CloseIcon />}
-                            onClick={() => handleRejectHotel(hotel.id)}
-                          >
-                            Reject
-                          </Button>
-                          <Button
-                            variant="contained"
-                            color="success"
-                            startIcon={<CheckIcon />}
-                            onClick={() => handleApproveHotel(hotel.id)}
-                          >
-                            Approve
-                          </Button>
-                        </Box>
-                      </CardContent>
-                    </Card>
-                  </Grid>
-                ))}
-              </Grid>
-            </Box>
-          </Paper>
+          <div className="p-6 space-y-6">
+            <h1 className="text-3xl font-bold text-gray-800 mb-6">Yönetim Paneli</h1>
+            
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {/* Otel Sayısı Kartı */}
+              <div className="bg-white shadow-md rounded-lg p-6 flex items-center">
+                <HotelIcon className="w-12 h-12 text-blue-500 mr-4" />
+                <div>
+                  <h2 className="text-xl font-semibold">Toplam Otel Sayısı</h2>
+                  <p className="text-2xl font-bold text-gray-700">120</p>
+                </div>
+              </div>
+
+              {/* Kullanıcı Sayısı Kartı */}
+              <div className="bg-white shadow-md rounded-lg p-6 flex items-center">
+                <UsersIcon className="w-12 h-12 text-green-500 mr-4" />
+                <div>
+                  <h2 className="text-xl font-semibold">Toplam Kullanıcı</h2>
+                  <p className="text-2xl font-bold text-gray-700">1,250</p>
+                </div>
+              </div>
+
+              {/* Gelir Kartı */}
+              <div className="bg-white shadow-md rounded-lg p-6 flex items-center">
+                <DollarSignIcon className="w-12 h-12 text-purple-500 mr-4" />
+                <div>
+                  <h2 className="text-xl font-semibold">Toplam Gelir</h2>
+                  <p className="text-2xl font-bold text-gray-700">₺250,000</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
+              {/* Otel Sayısı Grafiği */}
+              <div className="bg-white shadow-md rounded-lg p-6">
+                <h2 className="text-xl font-semibold mb-4">Aylık Otel Sayısı</h2>
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={hotelData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" />
+                    <YAxis />
+                    <Tooltip />
+                    <Legend />
+                    <Bar dataKey="oteller" fill="#8884d8" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+
+              {/* Kullanıcı Sayısı Grafiği */}
+              <div className="bg-white shadow-md rounded-lg p-6">
+                <h2 className="text-xl font-semibold mb-4">Aylık Kullanıcı Sayısı</h2>
+                <ResponsiveContainer width="100%" height={300}>
+                  <LineChart data={userData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" />
+                    <YAxis />
+                    <Tooltip />
+                    <Legend />
+                    <Line type="monotone" dataKey="kullanıcılar" stroke="#82ca9d" />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+
+              {/* Otel Durumu Pasta Grafiği */}
+              <div className="bg-white shadow-md rounded-lg p-6">
+                <h2 className="text-xl font-semibold mb-4">Otel Durumları</h2>
+                <ResponsiveContainer width="100%" height={300}>
+                  <PieChart>
+                    <Pie
+                      data={otelStatusData}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      outerRadius={80}
+                      fill="#8884d8"
+                      dataKey="value"
+                      label={({ name, percent }) => `${name} %${(percent * 100).toFixed(0)}`}
+                    >
+                      {otelStatusData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          </div>
         </Grid>
       </Grid>
 
@@ -284,4 +312,4 @@ const AdminPanel = () => {
   )
 }
 
-export default AdminPanel 
+export default AdminPanel
