@@ -3,9 +3,7 @@ import {
   Card, 
   CardContent, 
   CardHeader, 
-  CardTitle, 
-  CardDescription 
-} from "@/components/ui/card";
+  CardTitle} from "@/components/ui/card";
 import { 
   Tabs, 
   TabsContent, 
@@ -131,7 +129,7 @@ const HotelsOverview: React.FC = () => {
                 rel="noopener noreferrer" 
                 className="text-blue-600 hover:underline"
               >
-                View Documents
+                View Documentss
               </a>
             </div>
           ) : (
