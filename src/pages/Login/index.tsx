@@ -1,17 +1,114 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { FaEnvelope, FaLock, FaGoogle, FaFacebook, FaEye, FaEyeSlash } from 'react-icons/fa'
+import axios from 'axios'
+import apiService, { UserRole } from '../../services/apiService'
+import { toast } from 'react-toastify'
+
+const API_BASE_URL = 'https://localhost:7174/api'
 
 const Login = () => {
   const navigate = useNavigate()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
+  const [loading, setLoading] = useState(false)
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    // TODO: Implement login logic
-    console.log('Login attempt:', { email, password })
+    setLoading(true)
+
+    try {
+      console.log('Login attempt with:', { 
+        email: email, 
+        passwordLength: password.length 
+      });
+
+      // Perform login request
+      const response = await axios.post(`${API_BASE_URL}/Auth/login`, { 
+        email: email, 
+        password 
+      }, {
+        // Add this to help diagnose any CORS or network issues
+        withCredentials: false
+      });
+      
+      console.log('Login response:', response.data);
+
+      // Prepare auth response
+      const authResponse = {
+        token: response.data.token,
+        role: response.data.role
+      };
+
+      // Store token in localStorage
+      localStorage.setItem('token', authResponse.token);
+      localStorage.setItem('role', authResponse.role);
+
+      // Dispatch a custom event to notify other components
+      window.dispatchEvent(new Event('loginStatusChanged'));
+
+      // Set authorization header for future requests
+      axios.defaults.headers.common['Authorization'] = `Bearer ${authResponse.token}`;
+
+      // Set authentication in service
+      apiService.setAuth(authResponse);
+      
+      // Successfully logged in
+      toast.success('Giriş başarılı!')
+
+      // Navigate based on user role
+      switch (authResponse.role) {
+        case UserRole.SuperAdmin:
+          navigate('/admin/dashboard')
+          break
+        case UserRole.HotelAdmin:
+          navigate('/hotel/dashboard')
+          break
+        case UserRole.User:
+          navigate('/user/dashboard')
+          break
+        default:
+          navigate('/')
+      }
+    } catch (error) {
+      // Handle login error
+      if (axios.isAxiosError(error)) {
+        if (error.response) {
+          // The request was made and the server responded with a status code
+          console.error('Full error object:', error);
+          console.error('Error response data:', error.response.data);
+          console.error('Error status:', error.response.status);
+          console.error('Error headers:', error.response.headers);
+          
+          // More detailed error toast
+          const errorMessage = error.response.data?.message || 
+                               error.response.data?.title || 
+                               'Hatalı giriş, lütfen tekrar deneyin.';
+          toast.error(errorMessage);
+        } else if (error.request) {
+          // The request was made but no response was received
+          console.error('No response received:', error.request);
+          toast.error('Sunucuya bağlanılamadı. Lütfen internet bağlantınızı kontrol edin.')
+        } else {
+          // Something happened in setting up the request
+          console.error('Error setting up request:', error.message);
+          toast.error('Giriş sırasında bir hata oluştu.')
+        }
+      } else {
+        // Non-Axios error
+        console.error('Unexpected error:', error);
+        toast.error('Giriş başarısız. Lütfen bilgilerinizi kontrol edin.')
+      }
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const isAuthenticated = () => {
+    // Check if there is a token in localStorage
+    const token = localStorage.getItem('token');
+    return token ? true : false;
   }
 
   return (
@@ -92,9 +189,10 @@ const Login = () => {
           <div>
             <button
               type="submit"
-              className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-xl text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200 transform hover:scale-[1.02]"
+              disabled={loading}
+              className={`group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-xl text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200 transform hover:scale-[1.02] ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
-              Giriş Yap
+              {loading ? 'Giriş Yapılıyor...' : 'Giriş Yap'}
             </button>
           </div>
 

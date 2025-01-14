@@ -1,18 +1,20 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { FaUser, FaEnvelope, FaLock, FaPhone, FaGoogle, FaFacebook, FaEye, FaEyeSlash } from 'react-icons/fa'
+import { FaUser, FaEnvelope, FaLock, FaEye, FaEyeSlash } from 'react-icons/fa'
+import axios from 'axios'
+import { toast } from 'react-toastify'
+
+const API_BASE_URL = 'https://localhost:7174/api'
 
 const Register = () => {
   const navigate = useNavigate()
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
-    phone: '',
-    password: '',
-    confirmPassword: ''
+    password: ''
   })
   const [showPassword, setShowPassword] = useState(false)
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [loading, setLoading] = useState(false)
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -21,10 +23,67 @@ const Register = () => {
     })
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // TODO: Implement register logic
-    console.log('Register attempt:', formData)
+    setLoading(true)
+
+    // Basic validation
+    if (!formData.fullName || !formData.email || !formData.password) {
+      toast.error('Lütfen tüm alanları doldurun.')
+      setLoading(false)
+      return
+    }
+
+    try {
+      console.log('Register attempt:', { 
+        fullName: formData.fullName,
+        email: formData.email 
+      });
+
+      const response = await axios.post(`${API_BASE_URL}/Auth/register`, {
+        fullName: formData.fullName,
+        email: formData.email,
+        password: formData.password
+      });
+
+      console.log('Register response:', response.data);
+
+      // Show success message
+      toast.success('Kayıt başarılı! Lütfen giriş yapın.')
+
+      // Redirect to login page
+      navigate('/login')
+    } catch (error) {
+      // Handle registration error
+      if (axios.isAxiosError(error)) {
+        if (error.response) {
+          // The request was made and the server responded with a status code
+          console.error('Full error object:', error);
+          console.error('Error response data:', error.response.data);
+          console.error('Error status:', error.response.status);
+          
+          // More detailed error toast
+          const errorMessage = error.response.data?.message || 
+                               error.response.data?.title || 
+                               'Kayıt sırasında bir hata oluştu.';
+          toast.error(errorMessage);
+        } else if (error.request) {
+          // The request was made but no response was received
+          console.error('No response received:', error.request);
+          toast.error('Sunucuya bağlanılamadı. Lütfen internet bağlantınızı kontrol edin.')
+        } else {
+          // Something happened in setting up the request
+          console.error('Error setting up request:', error.message);
+          toast.error('Kayıt sırasında bir hata oluştu.')
+        }
+      } else {
+        // Non-Axios error
+        console.error('Unexpected error:', error);
+        toast.error('Kayıt başarısız. Lütfen tekrar deneyin.')
+      }
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -76,22 +135,6 @@ const Register = () => {
               />
             </div>
 
-            {/* Phone Input */}
-            <div className="relative group">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <FaPhone className="h-5 w-5 text-gray-400 group-focus-within:text-blue-500 transition-colors duration-200" />
-              </div>
-              <input
-                type="tel"
-                name="phone"
-                required
-                className="appearance-none relative block w-full pl-10 pr-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                placeholder="Telefon numarası"
-                value={formData.phone}
-                onChange={handleChange}
-              />
-            </div>
-
             {/* Password Input */}
             <div className="relative group">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -101,48 +144,17 @@ const Register = () => {
                 type={showPassword ? "text" : "password"}
                 name="password"
                 required
-                className="appearance-none relative block w-full pl-10 pr-10 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                className="appearance-none relative block w-full pl-10 pr-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                 placeholder="Şifre"
                 value={formData.password}
                 onChange={handleChange}
               />
               <button
                 type="button"
-                className="absolute inset-y-0 right-0 pr-3 flex items-center"
                 onClick={() => setShowPassword(!showPassword)}
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-blue-500 transition-colors duration-200"
               >
-                {showPassword ? (
-                  <FaEyeSlash className="h-5 w-5 text-gray-400 hover:text-gray-600" />
-                ) : (
-                  <FaEye className="h-5 w-5 text-gray-400 hover:text-gray-600" />
-                )}
-              </button>
-            </div>
-
-            {/* Confirm Password Input */}
-            <div className="relative group">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <FaLock className="h-5 w-5 text-gray-400 group-focus-within:text-blue-500 transition-colors duration-200" />
-              </div>
-              <input
-                type={showConfirmPassword ? "text" : "password"}
-                name="confirmPassword"
-                required
-                className="appearance-none relative block w-full pl-10 pr-10 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                placeholder="Şifreyi tekrar girin"
-                value={formData.confirmPassword}
-                onChange={handleChange}
-              />
-              <button
-                type="button"
-                className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              >
-                {showConfirmPassword ? (
-                  <FaEyeSlash className="h-5 w-5 text-gray-400 hover:text-gray-600" />
-                ) : (
-                  <FaEye className="h-5 w-5 text-gray-400 hover:text-gray-600" />
-                )}
+                {showPassword ? <FaEyeSlash /> : <FaEye />}
               </button>
             </div>
           </div>
@@ -150,38 +162,15 @@ const Register = () => {
           <div>
             <button
               type="submit"
-              className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-xl text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200 transform hover:scale-[1.02]"
+              disabled={loading}
+              className={`group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-xl text-white 
+                ${loading 
+                  ? 'bg-gray-400 cursor-not-allowed' 
+                  : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700'
+                } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200`}
             >
-              Hesap Oluştur
+              {loading ? 'Kayıt Yapılıyor...' : 'Kayıt Ol'}
             </button>
-          </div>
-
-          <div className="mt-6">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300" />
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">Veya şununla devam et</span>
-              </div>
-            </div>
-
-            <div className="mt-6 grid grid-cols-2 gap-3">
-              <button
-                type="button"
-                className="w-full inline-flex justify-center py-3 px-4 border border-gray-300 rounded-xl shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200"
-              >
-                <FaGoogle className="h-5 w-5 text-red-500 mr-2" />
-                Google
-              </button>
-              <button
-                type="button"
-                className="w-full inline-flex justify-center py-3 px-4 border border-gray-300 rounded-xl shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200"
-              >
-                <FaFacebook className="h-5 w-5 text-blue-600 mr-2" />
-                Facebook
-              </button>
-            </div>
           </div>
         </form>
       </div>
