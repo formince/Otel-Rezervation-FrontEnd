@@ -14,4 +14,73 @@
   .card-hover {
     @apply transition-transform duration-300 hover:scale-105;
   }
+}
+
+/* Google Places Autocomplete Özelleştirmeleri */
+.pac-container {
+  background-color: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(8px);
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  font-family: inherit;
+  margin-top: 8px;
+  padding: 8px 0;
+}
+
+.pac-item {
+  padding: 8px 16px;
+  cursor: pointer;
+  font-size: 14px;
+  border: none;
+  color: #333;
+  transition: all 0.2s ease;
+}
+
+.pac-item:hover {
+  background-color: rgba(59, 130, 246, 0.1);
+}
+
+.pac-item-selected {
+  background-color: rgba(59, 130, 246, 0.15);
+}
+
+.pac-icon {
+  margin-right: 12px;
+  color: #3b82f6;
+}
+
+.pac-item-query {
+  font-size: 14px;
+  color: #1f2937;
+  font-weight: 500;
+  padding-right: 8px;
+}
+
+.pac-matched {
+  color: #3b82f6;
+  font-weight: 600;
+}
+
+.pac-item span:not(.pac-item-query) {
+  font-size: 13px;
+  color: #6b7280;
+}
+
+/* Scrollbar özelleştirmesi */
+.pac-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.pac-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.pac-container::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+
+.pac-container::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(0, 0, 0, 0.3);
 } 

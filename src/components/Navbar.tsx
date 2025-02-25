@@ -15,9 +15,10 @@ import {
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import HotelIcon from '@mui/icons-material/Hotel';
+import { toast } from 'react-toastify';
 
-const pages = ['Hotels', 'Destinations', 'Deals'];
-const settings = ['Profil', 'Ayarlar', 'Çıkış Yap'];
+const pages = ['Hotels', 'Destinations', 'Deals', 'Contact'];
+const settings = ['Profil', 'Çıkış Yap'];
 
 function Navbar() {
   const [anchorElNav, setAnchorElNav] = useState<null | HTMLElement>(null);
@@ -25,20 +26,15 @@ function Navbar() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const navigate = useNavigate();
 
-  // Check login status on component mount and when localStorage changes
   useEffect(() => {
     const checkLoginStatus = () => {
       const token = localStorage.getItem('token');
       setIsLoggedIn(!!token);
     };
 
-    // Check initial status
     checkLoginStatus();
-
-    // Add event listener for storage changes
     window.addEventListener('storage', checkLoginStatus);
 
-    // Cleanup listener
     return () => {
       window.removeEventListener('storage', checkLoginStatus);
     };
@@ -62,19 +58,17 @@ function Navbar() {
 
   const handleUserMenuAction = (setting: string) => {
     handleCloseUserMenu();
+    
     switch (setting) {
       case 'Profil':
-        navigate('/profile');
-        break;
-      case 'Ayarlar':
-        navigate('/settings');
+        navigate('/profil');
         break;
       case 'Çıkış Yap':
-        // Logout logic
         localStorage.removeItem('token');
         localStorage.removeItem('role');
         setIsLoggedIn(false);
         navigate('/login');
+        toast.success('Başarıyla çıkış yapıldı.');
         break;
     }
   };
@@ -99,7 +93,7 @@ function Navbar() {
               textDecoration: 'none',
             }}
           >
-            HOTELS
+            OTEL
           </Typography>
 
           <Box sx={{ flexGrow: 1, display: { xs: 'flex', md: 'none' } }}>
@@ -132,41 +126,29 @@ function Navbar() {
               }}
             >
               {pages.map((page) => (
-                <MenuItem key={page} onClick={handleCloseNavMenu}>
-                  <Typography textAlign="center">{page}</Typography>
+                <MenuItem key={page} onClick={() => {
+                  handleCloseNavMenu();
+                  navigate(page.toLowerCase() === 'contact' ? '/iletisim' : `/${page.toLowerCase()}`);
+                }}>
+                  <Typography textAlign="center">
+                    {page === 'Contact' ? 'İletişim' : page}
+                  </Typography>
                 </MenuItem>
               ))}
             </Menu>
           </Box>
-          
-          <HotelIcon sx={{ display: { xs: 'flex', md: 'none' }, mr: 1 }} />
-          <Typography
-            variant="h5"
-            noWrap
-            component={RouterLink}
-            to="/"
-            sx={{
-              mr: 2,
-              display: { xs: 'flex', md: 'none' },
-              flexGrow: 1,
-              fontFamily: 'monospace',
-              fontWeight: 700,
-              letterSpacing: '.3rem',
-              color: 'inherit',
-              textDecoration: 'none',
-            }}
-          >
-            HOTELS
-          </Typography>
-          
+
           <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' } }}>
             {pages.map((page) => (
               <Button
                 key={page}
-                onClick={handleCloseNavMenu}
+                onClick={() => {
+                  handleCloseNavMenu();
+                  navigate(page.toLowerCase() === 'contact' ? '/iletisim' : `/${page.toLowerCase()}`);
+                }}
                 sx={{ my: 2, color: 'white', display: 'block' }}
               >
-                {page}
+                {page === 'Contact' ? 'İletişim' : page}
               </Button>
             ))}
           </Box>

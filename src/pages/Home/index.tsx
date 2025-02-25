@@ -1,7 +1,9 @@
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, useScroll, useTransform, useSpring } from 'framer-motion'
 import { FaStar, FaHeart, FaSwimmingPool, FaWifi, FaParking, FaCocktail, FaSearch, FaMapMarkerAlt, FaRegCalendarAlt, FaUser, FaPercent, FaPlus, FaMinus } from 'react-icons/fa'
+import axios from 'axios'
+import { toast } from 'react-toastify'
 
 const popularDestinations = [
   {
@@ -51,14 +53,113 @@ const deals = [
   }
 ]
 
+interface SearchPlace {
+  address: string;
+  lat: number;
+  lng: number;
+}
+
+const libraries: ("places")[] = ["places"];
+
 const Home = () => {
   const navigate = useNavigate()
   const [destination, setDestination] = useState('')
-  const [checkIn, setCheckIn] = useState<Date | null>(null)
-  const [checkOut, setCheckOut] = useState<Date | null>(null)
+  const [checkIn, setCheckIn] = useState<Date | null>(() => {
+    const today = new Date();
+    return today;
+  })
+  const [checkOut, setCheckOut] = useState<Date | null>(() => {
+    const today = new Date();
+    today.setDate(today.getDate() + 2);
+    return today;
+  })
   const [guests, setGuests] = useState(2)
   const [showGuestInput, setShowGuestInput] = useState(false)
+  const [activeIndex, setActiveIndex] = useState<number | null>(null)
+  const [searchPlace, setSearchPlace] = useState<SearchPlace | null>(null)
+  const [autocomplete, setAutocomplete] = useState<google.maps.places.Autocomplete | null>(null)
   const { scrollY } = useScroll()
+
+  useEffect(() => {
+    // Google Maps API'sini yükle
+    const loadGoogleMapsScript = () => {
+      const script = document.createElement('script');
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}&libraries=places`;
+      script.async = true;
+      script.defer = true;
+      script.onload = initializeAutocomplete;
+      document.head.appendChild(script);
+    };
+
+    const initializeAutocomplete = () => {
+      const input = document.getElementById('location-input') as HTMLInputElement;
+      if (input && window.google && window.google.maps) {
+        const autocomplete = new google.maps.places.Autocomplete(input, {
+          componentRestrictions: { country: 'tr' },
+          fields: ['address_components', 'formatted_address', 'geometry', 'name'],
+          types: ['geocode', 'establishment']
+        });
+
+        autocomplete.addListener('place_changed', () => {
+          const place = autocomplete.getPlace();
+          
+          if (!place.geometry?.location) {
+            console.error('Seçilen yerin koordinatları bulunamadı');
+            return;
+          }
+
+          const lat = place.geometry.location.lat();
+          const lng = place.geometry.location.lng();
+          
+          // Adresi sadeleştir
+          let formattedAddress = '';
+          if (place.address_components) {
+            const district = place.address_components.find(comp => 
+              comp.types.includes('sublocality_level_1') || 
+              comp.types.includes('sublocality') ||
+              comp.types.includes('neighborhood')
+            )?.long_name;
+
+            const city = place.address_components.find(comp => 
+              comp.types.includes('administrative_area_level_1')
+            )?.long_name;
+
+            if (district && city) {
+              formattedAddress = district !== city ? `${city} ${district}` : city;
+            } else {
+              formattedAddress = place.formatted_address?.split(',')[0] || '';
+            }
+          }
+
+          setSearchPlace({
+            address: formattedAddress,
+            lat,
+            lng
+          });
+          setDestination(formattedAddress);
+
+          console.log('Seçilen konum:', { formattedAddress, lat, lng });
+        });
+
+        setAutocomplete(autocomplete);
+      }
+    };
+
+    // Google Maps API'si yüklü değilse yükle
+    if (!window.google) {
+      loadGoogleMapsScript();
+    } else {
+      initializeAutocomplete();
+    }
+
+    // Cleanup
+    return () => {
+      const script = document.querySelector('script[src*="maps.googleapis.com/maps/api"]');
+      if (script) {
+        script.remove();
+      }
+    };
+  }, []);
 
   const handleGuestChange = (value: string) => {
     const numValue = parseInt(value)
@@ -80,15 +181,42 @@ const Home = () => {
   const heroScale = useTransform(scrollY, [0, 300], [1, 0.8])
   const heroY = useTransform(scrollY, [0, 300], [0, 100])
 
-  const handleSearch = () => {
-    navigate('/search', {
-      state: {
-        destination,
-        checkIn,
-        checkOut,
-        guests,
-      },
-    })
+  const handleSearch = async () => {
+    if (searchPlace && checkIn && checkOut) {
+      try {
+        const response = await axios.get(`https://localhost:7174/api/HotelSearch`, {
+          params: {
+            Latitude: searchPlace.lat,
+            Longitude: searchPlace.lng,
+            CheckInDate: checkIn.toISOString().split('T')[0],
+            CheckOutDate: checkOut.toISOString().split('T')[0],
+            NumberOfGuests: guests
+          }
+        });
+
+        // URL parametrelerini oluştur
+        const searchParams = new URLSearchParams({
+          destination: destination,
+          checkIn: checkIn.toISOString().split('T')[0],
+          checkOut: checkOut.toISOString().split('T')[0],
+          adults: guests.toString(),
+          lat: searchPlace.lat.toString(),
+          lng: searchPlace.lng.toString()
+        });
+
+        // Search sayfasına yönlendir ve URL'e parametreleri ekle
+        navigate(`/search?${searchParams.toString()}`, {
+          state: {
+            searchResults: response.data
+          },
+        });
+      } catch (error) {
+        console.error('Otel arama hatası:', error);
+        toast.error('Otel araması sırasında bir hata oluştu. Lütfen tekrar deneyin.');
+      }
+    } else {
+      toast.warning('Lütfen konum, giriş ve çıkış tarihlerini seçin.');
+    }
   }
 
   return (
@@ -143,13 +271,14 @@ const Home = () => {
                   Nereye?
                 </label>
                 <div className="relative">
-                  <FaMapMarkerAlt className="absolute left-3 top-3" />
+                  <FaMapMarkerAlt className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/70" />
                   <input
+                    id="location-input"
                     type="text"
                     value={destination}
                     onChange={(e) => setDestination(e.target.value)}
-                    placeholder="Şehir veya otel adı"
-                    className="w-full pl-10 pr-4 py-2 bg-white/30 backdrop-blur-sm border border-white/30 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white placeholder-gray-300"
+                    placeholder="Şehir veya bölge adı"
+                    className="w-full pl-10 pr-4 py-3 bg-white/30 backdrop-blur-sm border border-white/30 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white placeholder-gray-300 h-[45px]"
                   />
                 </div>
               </div>
@@ -328,149 +457,7 @@ const Home = () => {
       </motion.div>
 
       {/* About Us Section */}
-      <div className="relative py-20 overflow-hidden bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900">
-        {/* Animated Particles */}
-        <div className="absolute inset-0">
-          {[...Array(20)].map((_, index) => (
-            <motion.div
-              key={index}
-              className="absolute w-2 h-2 bg-white rounded-full"
-              style={{
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
-              }}
-              animate={{
-                y: [0, -100],
-                opacity: [0, 1, 0],
-              }}
-              transition={{
-                duration: Math.random() * 2 + 1,
-                repeat: Infinity,
-                delay: Math.random() * 2,
-              }}
-            />
-          ))}
-        </div>
-
-        <div className="container mx-auto px-4 relative z-10">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            viewport={{ once: true }}
-            className="text-center mb-16"
-          >
-            <motion.h2
-              className="text-4xl md:text-5xl font-bold text-white mb-6"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-            >
-              Sizin İçin Buradayız
-            </motion.h2>
-            <motion.div
-              className="w-24 h-1 bg-blue-400 mx-auto mb-8"
-              initial={{ width: 0 }}
-              whileInView={{ width: 96 }}
-              transition={{ duration: 0.8, delay: 0.4 }}
-            />
-          </motion.div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            {/* Vision Card */}
-            <motion.div
-              className="group"
-              initial={{ opacity: 0, x: -50 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              viewport={{ once: true }}
-            >
-              <div className="bg-white/10 backdrop-blur-md p-8 rounded-2xl h-full transform transition-all duration-300 group-hover:translate-y-[-10px] group-hover:shadow-2xl">
-                <motion.div
-                  className="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center mb-6 mx-auto"
-                  whileHover={{ rotate: 360 }}
-                  transition={{ duration: 0.8 }}
-                >
-                  <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v2m6-2v2"></path>
-                  </svg>
-                </motion.div>
-                <h3 className="text-2xl font-bold text-white text-center mb-4">Vizyonumuz</h3>
-                <p className="text-blue-100 text-center leading-relaxed">
-                  Seyahat deneyimini yeniden tanımlayarak, misafirlerimize unutulmaz anılar yaşatmak için çalışıyoruz.
-                </p>
-              </div>
-            </motion.div>
-
-            {/* Mission Card */}
-            <motion.div
-              className="group"
-              initial={{ opacity: 0, y: 50 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.4 }}
-              viewport={{ once: true }}
-            >
-              <div className="bg-white/10 backdrop-blur-md p-8 rounded-2xl h-full transform transition-all duration-300 group-hover:translate-y-[-10px] group-hover:shadow-2xl">
-                <motion.div
-                  className="w-16 h-16 bg-purple-500 rounded-full flex items-center justify-center mb-6 mx-auto"
-                  whileHover={{ rotate: 360 }}
-                  transition={{ duration: 0.8 }}
-                >
-                  <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
-                  </svg>
-                </motion.div>
-                <h3 className="text-2xl font-bold text-white text-center mb-4">Misyonumuz</h3>
-                <p className="text-blue-100 text-center leading-relaxed">
-                  Her bütçeye uygun, kaliteli ve güvenilir konaklama seçenekleri sunarak müşteri memnuniyetini en üst düzeyde tutmak.
-                </p>
-              </div>
-            </motion.div>
-
-            {/* Values Card */}
-            <motion.div
-              className="group"
-              initial={{ opacity: 0, x: 50 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6, delay: 0.6 }}
-              viewport={{ once: true }}
-            >
-              <div className="bg-white/10 backdrop-blur-md p-8 rounded-2xl h-full transform transition-all duration-300 group-hover:translate-y-[-10px] group-hover:shadow-2xl">
-                <motion.div
-                  className="w-16 h-16 bg-indigo-500 rounded-full flex items-center justify-center mb-6 mx-auto"
-                  whileHover={{ rotate: 360 }}
-                  transition={{ duration: 0.8 }}
-                >
-                  <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5"></path>
-                  </svg>
-                </motion.div>
-                <h3 className="text-2xl font-bold text-white text-center mb-4">Değerlerimiz</h3>
-                <p className="text-blue-100 text-center leading-relaxed">
-                  Güvenilirlik, şeffaflık ve müşteri odaklı hizmet anlayışıyla sektörde fark yaratıyoruz.
-                </p>
-              </div>
-            </motion.div>
-          </div>
-
-          <motion.div
-            className="text-center mt-12"
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.8 }}
-            viewport={{ once: true }}
-          >
-            <motion.button
-              className="bg-white text-blue-900 px-8 py-3 rounded-full font-semibold hover:bg-blue-50 transition-colors"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => navigate('/about')}
-            >
-              Daha Fazla Bilgi
-            </motion.button>
-          </motion.div>
-        </div>
-      </div>
+     
 
       {/* Special Deals */}
       <div className="bg-gray-100 py-16">
@@ -611,10 +598,103 @@ const Home = () => {
         </div>
       </div>
 
+      {/* Sık Sorulan Sorular */}
+      <div className="bg-white py-16">
+        <div className="container mx-auto px-4">
+          <motion.h2 
+            className="text-3xl font-bold text-center mb-12"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+          >
+            Sık Sorulan Sorular
+          </motion.h2>
+          <div className="max-w-3xl mx-auto space-y-4">
+            {[
+              {
+                question: "Rezervasyon iptal politikanız nedir?",
+                answer: "Rezervasyon iptalleri, seçilen otelin politikasına göre değişiklik gösterir. Genel olarak, check-in tarihinden 24-48 saat öncesine kadar yapılan iptallerde tam iade yapılmaktadır. Detaylı bilgi için rezervasyon onayınızda yer alan iptal koşullarını inceleyebilirsiniz."
+              },
+              {
+                question: "Ödeme seçenekleriniz nelerdir?",
+                answer: "Kredi kartı, banka kartı ve havale/EFT ile ödeme yapabilirsiniz. Bazı otellerde 'Otelde Ödeme' seçeneği de sunulmaktadır. Tüm ödemeleriniz 256-bit SSL ile şifrelenerek güvenle gerçekleştirilmektedir."
+              },
+              {
+                question: "Check-in ve check-out saatleri nelerdir?",
+                answer: "Standart check-in saati 14:00, check-out saati ise 12:00'dir. Ancak bu saatler otelden otele değişiklik gösterebilir. Erken check-in veya geç check-out taleplerinizi otel ile direkt iletişime geçerek düzenleyebilirsiniz."
+              },
+              {
+                question: "Çocuklar için yaş sınırı ve ücretlendirme nasıldır?",
+                answer: "0-6 yaş arası çocuklar genellikle ücretsizdir. 7-12 yaş arası çocuklar için indirimli tarife uygulanmaktadır. Kesin bilgi için otel detaylarını incelemenizi veya müşteri hizmetlerimizle iletişime geçmenizi öneririz."
+              },
+              {
+                question: "Rezervasyonumu nasıl değiştirebilirim?",
+                answer: "Rezervasyon değişikliklerinizi hesabınızdan veya müşteri hizmetlerimizle iletişime geçerek yapabilirsiniz. Değişiklik koşulları, rezervasyonunuzun türüne ve otelin politikalarına göre farklılık gösterebilir."
+              },
+              {
+                question: "Sadakat seviyesi sistemi nasıl çalışır?",
+                answer: "Sadakat seviyesi sistemi, müşterilerimize özel ayrıcalıklar sunan 5 seviyeli bir programdır: Bronz (0-100 puan), Gümüş (100-300 puan), Altın (300-600 puan), Platin (600-1000 puan) ve Elmas (1000-2000 puan). Her rezervasyonunuzda puan kazanır ve bir üst seviyeye yükselirsiniz. Üst seviyelerde özel indirimler, erken check-in/geç check-out imkanı ve ücretsiz oda yükseltme gibi ayrıcalıklar sunulmaktadır."
+              }
+            ].map((faq, index) => (
+              <motion.div
+                key={index}
+                className="border border-gray-200 rounded-lg overflow-hidden"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: index * 0.1 }}
+              >
+                <motion.div
+                  className="bg-white p-4 cursor-pointer hover:bg-gray-50"
+                  onClick={() => setActiveIndex(activeIndex === index ? null : index)}
+                >
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-lg font-semibold text-gray-900">{faq.question}</h3>
+                    <motion.span
+                      className="text-blue-600"
+                      animate={{ rotate: activeIndex === index ? 180 : 0 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <svg
+                        className="w-6 h-6"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 9l-7 7-7-7"
+                        />
+                      </svg>
+                    </motion.span>
+                  </div>
+                </motion.div>
+                <motion.div
+                  className="bg-gray-50 overflow-hidden"
+                  initial={false}
+                  animate={{
+                    height: activeIndex === index ? "auto" : 0,
+                    opacity: activeIndex === index ? 1 : 0
+                  }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <p className="p-4 text-gray-600">
+                    {faq.answer}
+                  </p>
+                </motion.div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </div>
+
       {/* Footer */}
    
     </div>
   )
 }
 
-export default Home 
+export default Home; 

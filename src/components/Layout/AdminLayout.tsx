@@ -1,6 +1,13 @@
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Users, Building2, CreditCard, Settings, LogOut } from 'lucide-react';
+import { Link, useLocation, Outlet } from 'react-router-dom';
+import { 
+  LayoutGrid, 
+  Users2, 
+  Building, 
+  CreditCard, 
+  Settings2, 
+  LogOut 
+} from 'lucide-react';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -43,21 +50,21 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
               to="/admin" 
               className={`flex items-center gap-2 px-4 py-2 rounded-md transition-colors ${isActive('/admin')}`}
             >
-              <LayoutDashboard className="h-4 w-4" />
+              <LayoutGrid className="h-4 w-4" />
               Dashboard
             </Link>
             <Link 
               to="/admin/users" 
               className={`flex items-center gap-2 px-4 py-2 rounded-md transition-colors ${isActive('/admin/users')}`}
             >
-              <Users className="h-4 w-4" />
+              <Users2 className="h-4 w-4" />
               Users
             </Link>
             <Link 
               to="/admin/hotels" 
               className={`flex items-center gap-2 px-4 py-2 rounded-md transition-colors ${isActive('/admin/hotels')}`}
             >
-              <Building2 className="h-4 w-4" />
+              <Building className="h-4 w-4" />
               Hotels
             </Link>
             <Link 
@@ -71,7 +78,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
               to="/admin/settings" 
               className={`flex items-center gap-2 px-4 py-2 rounded-md transition-colors ${isActive('/admin/settings')}`}
             >
-              <Settings className="h-4 w-4" />
+              <Settings2 className="h-4 w-4" />
               Settings
             </Link>
           </nav>

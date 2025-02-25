@@ -1,99 +1,16 @@
-import { useState } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { FaStar, FaWifi, FaParking, FaSwimmingPool, FaUtensils, FaMapMarkerAlt, FaCalendarAlt, FaUser, FaSearch } from 'react-icons/fa'
 
-const mockHotels = [
-  {
-    id: 1,
-    name: 'Grand Luxury Hotel',
-    image: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
-    rating: 5,
-    price: 1200,
-    location: 'İstanbul, Türkiye',
-    amenities: ['wifi', 'parking', 'pool', 'restaurant'],
-    description: 'Boğaz manzaralı lüks odalar ve dünya standartlarında hizmet.',
-  },
-  {
-    id: 2,
-    name: 'Seaside Resort & Spa',
-    image: 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
-    rating: 4,
-    price: 800,
-    location: 'Antalya, Türkiye',
-    amenities: ['wifi', 'pool', 'restaurant'],
-    description: 'Denize sıfır konumu ve spa olanaklarıyla mükemmel bir tatil deneyimi.',
-  },
-  {
-    id: 3,
-    name: 'City Center Hotel',
-    image: 'https://images.unsplash.com/photo-1566665797739-1674de7a421a?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
-    rating: 4,
-    price: 600,
-    location: 'İzmir, Türkiye',
-    amenities: ['wifi', 'parking', 'restaurant'],
-    description: 'Şehir merkezinde konforlu konaklama ve modern olanaklar.',
-  },
-  {
-    id: 3,
-    name: 'City Center Hotel',
-    image: 'https://images.unsplash.com/photo-1566665797739-1674de7a421a?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
-    rating: 4,
-    price: 600,
-    location: 'İzmir, Türkiye',
-    amenities: ['wifi', 'parking', 'restaurant'],
-    description: 'Şehir merkezinde konforlu konaklama ve modern olanaklar.',
-  },
-  {
-    id: 3,
-    name: 'City Center Hotel',
-    image: 'https://images.unsplash.com/photo-1566665797739-1674de7a421a?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
-    rating: 4,
-    price: 600,
-    location: 'İzmir, Türkiye',
-    amenities: ['wifi', 'parking', 'restaurant'],
-    description: 'Şehir merkezinde konforlu konaklama ve modern olanaklar.',
-  },
-  {
-    id: 3,
-    name: 'City Center Hotel',
-    image: 'https://images.unsplash.com/photo-1566665797739-1674de7a421a?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
-    rating: 4,
-    price: 600,
-    location: 'İzmir, Türkiye',
-    amenities: ['wifi', 'parking', 'restaurant'],
-    description: 'Şehir merkezinde konforlu konaklama ve modern olanaklar.',
-  },
-  {
-    id: 3,
-    name: 'City Center Hotel',
-    image: 'https://images.unsplash.com/photo-1566665797739-1674de7a421a?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
-    rating: 4,
-    price: 600,
-    location: 'İzmir, Türkiye',
-    amenities: ['wifi', 'parking', 'restaurant'],
-    description: 'Şehir merkezinde konforlu konaklama ve modern olanaklar.',
-  },
-  {
-    id: 3,
-    name: 'City Center Hotel',
-    image: 'https://images.unsplash.com/photo-1566665797739-1674de7a421a?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
-    rating: 4,
-    price: 600,
-    location: 'İzmir, Türkiye',
-    amenities: ['wifi', 'parking', 'restaurant'],
-    description: 'Şehir merkezinde konforlu konaklama ve modern olanaklar.',
-  },
-  {
-    id: 3,
-    name: 'City Center Hotel',
-    image: 'https://images.unsplash.com/photo-1566665797739-1674de7a421a?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
-    rating: 4,
-    price: 600,
-    location: 'İzmir, Türkiye',
-    amenities: ['wifi', 'parking', 'restaurant'],
-    description: 'Şehir merkezinde konforlu konaklama ve modern olanaklar.',
-  },
-]
+interface Hotel {
+  hotelId: number;
+  hotelName: string;
+  address: string;
+  rating: number | null;
+  cheapestRoomPrice: number;
+  distance: number;
+  hotelImageUrl: string;
+}
 
 const amenityIcons = {
   wifi: FaWifi,
@@ -105,9 +22,21 @@ const amenityIcons = {
 const SearchResults = () => {
   const location = useLocation()
   const navigate = useNavigate()
-  const [priceRange, setPriceRange] = useState([0, 2000])
+  const [searchParams] = useSearchParams()
+  const [priceRange, setPriceRange] = useState<[number | null, number | null]>([null, null])
   const [selectedRating, setSelectedRating] = useState<number | null>(null)
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([])
+
+  // URL'den parametreleri al
+  const destination = searchParams.get('destination') || ''
+  const checkIn = searchParams.get('checkIn') || ''
+  const checkOut = searchParams.get('checkOut') || ''
+  const adults = searchParams.get('adults') || '2'
+  const lat = searchParams.get('lat') || ''
+  const lng = searchParams.get('lng') || ''
+
+  // API'den gelen otel sonuçlarını location state'inden al
+  const searchResults = location.state?.searchResults || []
 
   const handleAmenityToggle = (amenity: string) => {
     setSelectedAmenities((prev) =>
@@ -117,18 +46,37 @@ const SearchResults = () => {
     )
   }
 
-  const filteredHotels = mockHotels.filter((hotel) => {
-    const matchesPrice = hotel.price >= priceRange[0] && hotel.price <= priceRange[1]
-    const matchesRating = selectedRating ? hotel.rating >= selectedRating : true
-    const matchesAmenities =
-      selectedAmenities.length === 0 ||
-      selectedAmenities.every((amenity) => hotel.amenities.includes(amenity))
-    return matchesPrice && matchesRating && matchesAmenities
+  const filteredHotels = searchResults.filter((hotel: Hotel) => {
+    // Fiyat filtresi sadece kullanıcı bir aralık belirlediğinde çalışsın
+    const matchesPrice = 
+      (!priceRange[0] || hotel.cheapestRoomPrice >= priceRange[0]) && 
+      (!priceRange[1] || hotel.cheapestRoomPrice <= priceRange[1])
+    
+    const matchesRating = selectedRating ? (hotel.rating || 0) >= selectedRating : true
+    return matchesPrice && matchesRating
   })
 
-  const handleReservation = (hotelId: number) => {
-    navigate(`/hotel/${hotelId}`)
-  }
+  const handleRoomSelect = (hotelId: number) => {
+    // URL parametrelerini oluştur
+    const params = new URLSearchParams({
+      checkIn: checkIn,
+      checkOut: checkOut,
+      adults: adults
+    });
+
+    // Otel detay sayfasına yönlendir
+    navigate(`/hotel/${hotelId}?${params.toString()}`);
+  };
+
+  // Gün sayısını hesaplayan fonksiyon
+  const calculateNights = () => {
+    if (!checkIn || !checkOut) return 0;
+    const start = new Date(checkIn);
+    const end = new Date(checkOut);
+    const diffTime = Math.abs(end.getTime() - start.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 pt-20">
@@ -144,57 +92,59 @@ const SearchResults = () => {
               <div className="mb-4">
                 <div className="flex items-center border-2 rounded-xl p-3 hover:border-blue-500 transition-all duration-300">
                   <FaMapMarkerAlt className="text-blue-600 mr-2" />
-                  <input
-                    type="text"
-                    placeholder="Nereye gidiyorsunuz?"
-                    defaultValue="Antalya"
-                    className="w-full outline-none text-gray-700 placeholder-gray-400 bg-transparent"
-                  />
-                </div>
+                    <input
+                      type="text"
+                      placeholder="Nereye gidiyorsunuz?"
+                      defaultValue={destination}
+                      className="w-full outline-none text-gray-700 placeholder-gray-400 bg-transparent"
+                    />
+                  </div>
               </div>
 
               {/* Check-in */}
               <div className="mb-4">
                 <div className="flex items-center border-2 rounded-xl p-3 hover:border-blue-500 transition-all duration-300">
                   <FaCalendarAlt className="text-blue-600 mr-2" />
-                  <input
-                    type="date"
-                    className="w-full outline-none text-gray-700 bg-transparent"
+                      <input
+                        type="date"
+                        className="w-full outline-none text-gray-700 bg-transparent"
                     placeholder="Giriş Tarihi"
-                  />
-                </div>
+                    defaultValue={checkIn}
+                      />
+                    </div>
               </div>
 
               {/* Check-out */}
               <div className="mb-4">
                 <div className="flex items-center border-2 rounded-xl p-3 hover:border-blue-500 transition-all duration-300">
                   <FaCalendarAlt className="text-blue-600 mr-2" />
-                  <input
-                    type="date"
-                    className="w-full outline-none text-gray-700 bg-transparent"
+                      <input
+                        type="date"
+                        className="w-full outline-none text-gray-700 bg-transparent"
                     placeholder="Çıkış Tarihi"
-                  />
+                    defaultValue={checkOut}
+                      />
+                    </div>
                 </div>
-              </div>
 
               {/* Guests */}
               <div className="mb-4">
                 <div className="flex items-center border-2 rounded-xl p-3 hover:border-blue-500 transition-all duration-300">
                   <FaUser className="text-blue-600 mr-2" />
-                  <input
-                    type="number"
-                    min="1"
-                    defaultValue="2"
-                    className="w-full outline-none text-gray-700 bg-transparent"
-                    placeholder="Misafir Sayısı"
-                  />
-                </div>
+                    <input
+                      type="number"
+                      min="1"
+                      defaultValue={adults}
+                      className="w-full outline-none text-gray-700 bg-transparent"
+                      placeholder="Misafir Sayısı"
+                    />
+                  </div>
               </div>
 
               {/* Search Button */}
               <button className="w-full bg-blue-600 text-white py-3 rounded-xl hover:bg-blue-700 transition-all duration-200 flex items-center justify-center font-semibold">
-                <FaSearch className="mr-2" />
-                <span>Ara</span>
+                  <FaSearch className="mr-2" />
+                  <span>Ara</span>
               </button>
             </div>
 
@@ -206,25 +156,25 @@ const SearchResults = () => {
               <div className="mb-6">
                 <h3 className="text-lg font-medium mb-4">Fiyat Aralığı</h3>
                 <div className="flex items-center space-x-4">
-                  <input
-                    type="number"
-                    value={priceRange[0]}
+                    <input
+                      type="number"
+                      value={priceRange[0] || ''}
                     onChange={(e) =>
-                      setPriceRange([Number(e.target.value), priceRange[1]])
+                      setPriceRange([Number(e.target.value) || null, priceRange[1]])
                     }
                     className="w-24 px-3 py-2 border border-gray-300 rounded-lg"
-                    placeholder="Min"
-                  />
+                      placeholder="Min"
+                    />
                   <span>-</span>
-                  <input
-                    type="number"
-                    value={priceRange[1]}
+                    <input
+                      type="number"
+                      value={priceRange[1] || ''}
                     onChange={(e) =>
-                      setPriceRange([priceRange[0], Number(e.target.value)])
+                      setPriceRange([priceRange[0], Number(e.target.value) || null])
                     }
                     className="w-24 px-3 py-2 border border-gray-300 rounded-lg"
-                    placeholder="Max"
-                  />
+                      placeholder="Max"
+                    />
                 </div>
               </div>
 
@@ -276,68 +226,102 @@ const SearchResults = () => {
           {/* Hotel List */}
           <div className="lg:w-3/4">
             <div className="grid grid-cols-1 gap-6">
-              {filteredHotels.map((hotel) => (
+              {filteredHotels.map((hotel: Hotel) => (
                 <div
-                  key={hotel.id}
-                  className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300"
-                >
-                  <div className="flex flex-col md:flex-row">
-                    <div className="md:w-1/3">
+                    key={hotel.hotelId}
+                    onClick={() => handleRoomSelect(hotel.hotelId)}
+                  className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer group"
+                  >
+                    <div className="flex flex-col md:flex-row h-[280px]">
+                    <div className="md:w-2/5 relative">
                       <img
-                        src={hotel.image}
-                        alt={hotel.name}
-                        className="h-full w-full object-cover"
-                      />
-                    </div>
-                    <div className="p-6 md:w-2/3">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <h3 className="text-xl font-semibold mb-2">
-                            {hotel.name}
-                          </h3>
-                          <p className="text-gray-600 mb-4">{hotel.location}</p>
-                        </div>
-                        <div className="flex items-center bg-blue-100 px-3 py-1 rounded-lg">
-                          <span className="text-blue-600 font-semibold mr-1">
-                            {hotel.rating}
-                          </span>
-                          <FaStar className="text-blue-600" />
-                        </div>
+                        src={hotel.hotelImageUrl || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80'}
+                          alt={hotel.hotelName}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.onerror = null; // Sonsuz döngüyü engellemek için
+                          target.src = 'https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80';
+                        }}
+                        />
                       </div>
-                      <p className="text-gray-700 mb-4">{hotel.description}</p>
-                      <div className="flex items-center space-x-4 mb-4">
-                        {hotel.amenities.map((amenity) => {
-                          const Icon = amenityIcons[amenity as keyof typeof amenityIcons]
-                          return (
-                            <Icon
-                              key={amenity}
-                              className="text-gray-600 h-5 w-5"
-                              title={amenity}
-                            />
-                          )
-                        })}
-                      </div>
-                      <div className="flex items-center justify-between">
+                    <div className="md:w-3/5 p-6 flex flex-col justify-between">
                         <div>
-                          <span className="text-2xl font-bold text-blue-600">
-                            ₺{hotel.price}
-                          </span>
-                          <span className="text-gray-600">/gece</span>
+                        <div className="flex justify-between items-start mb-2">
+                            <div>
+                            <h3 className="text-xl font-bold text-gray-900">
+                                {hotel.hotelName}
+                              </h3>
+                            <p className="text-gray-600 flex items-center mt-1">
+                              <FaMapMarkerAlt className="mr-2" />
+                                {hotel.address}
+                              </p>
+                            </div>
+                            {hotel.rating && (
+                            <div className="flex items-center bg-blue-100 text-blue-800 px-3 py-1 rounded-lg">
+                                <span className="font-semibold mr-1">{hotel.rating}</span>
+                                <FaStar />
+                            </div>
+                            )}
+                          </div>
+
+                        <div className="flex items-center gap-4 mt-4">
+                          <div className="flex items-center gap-2">
+                            <FaWifi className="text-gray-500" />
+                            <span className="text-sm text-gray-600">Her şey dahil</span>
+                            </div>
+                          <div className="flex items-center gap-2">
+                            <FaSwimmingPool className="text-gray-500" />
+                            <span className="text-sm text-gray-600">Havuz</span>
+                          </div>
                         </div>
-                        <button 
-                          className="bg-blue-600 text-white px-6 py-2 rounded-xl hover:bg-blue-700 transition-colors duration-300"
-                          onClick={() => handleReservation(hotel.id)}
-                        >
-                          Rezervasyon Yap
-                        </button>
+
+                        <div className="mt-4">
+                          <div className="flex items-center gap-2">
+                            <div className="bg-purple-100 text-purple-800 px-3 py-1 rounded-lg text-sm">
+                              Üye Fiyatı: %71 İndirim
+                            </div>
+                            </div>
+                          </div>
+                        </div>
+
+                      <div className="flex justify-between items-start mt-6">
+                        <div className="flex flex-col space-y-2">
+                            <div className="flex items-center gap-2">
+                              <p className="text-2xl font-bold text-blue-600">
+                                ₺{hotel.cheapestRoomPrice.toLocaleString('tr-TR')}
+                              </p>
+                            <span className="text-gray-500 text-base self-end mb-1">/gece</span>
+                            </div>
+                            {calculateNights() > 0 && (
+                            <div className="space-y-1">
+                                <p className="text-sm text-gray-500">{calculateNights()} gece için toplam:</p>
+                              <p className="text-lg font-semibold text-blue-600">
+                                  ₺{(hotel.cheapestRoomPrice * calculateNights()).toLocaleString('tr-TR')}
+                                </p>
+                              </div>
+                            )}
+                            <p className="text-xs text-gray-500">Vergiler ve ücretler dahildir</p>
+                          </div>
+                        <div className="flex items-center">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleRoomSelect(hotel.hotelId);
+                            }}
+                            className="bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700 transition-colors duration-200"
+                          >
+                            Rezervasyon Yap
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
-              ))}
-            </div>
+                ))}
           </div>
         </div>
+    </div>
       </div>
     </div>
   )

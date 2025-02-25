@@ -5,7 +5,7 @@ import axios from 'axios'
 import apiService, { UserRole } from '../../services/apiService'
 import { toast } from 'react-toastify'
 
-const API_BASE_URL = 'https://localhost:7174/api'
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
 const Login = () => {
   const navigate = useNavigate()
@@ -44,6 +44,8 @@ const Login = () => {
       // Store token in localStorage
       localStorage.setItem('token', authResponse.token);
       localStorage.setItem('role', authResponse.role);
+      localStorage.setItem('userId', response.data.userId);
+      localStorage.setItem('userEmail', email);
 
       // Dispatch a custom event to notify other components
       window.dispatchEvent(new Event('loginStatusChanged'));
@@ -166,19 +168,7 @@ const Login = () => {
             </div>
           </div>
 
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <input
-                id="remember-me"
-                name="remember-me"
-                type="checkbox"
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-              />
-              <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900">
-                Beni hatırla
-              </label>
-            </div>
-
+          <div className="flex items-center justify-end">
             <div className="text-sm">
               <Link to="/forgot-password" className="font-medium text-blue-600 hover:text-blue-500 transition-colors duration-200">
                 Şifremi unuttum

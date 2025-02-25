@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import axios from 'axios'
 import {
   Box,
   Container,
@@ -90,11 +91,56 @@ const hotelData = {
   ],
 }
 
+interface LoyaltyInfo {
+  level: string;
+  points: number;
+  nextLevelThreshold: number;
+}
+
 const HotelDetails = () => {
   const [selectedImage, setSelectedImage] = useState(0)
+  const [loyaltyInfo, setLoyaltyInfo] = useState<LoyaltyInfo | null>(null)
+
+  useEffect(() => {
+    const fetchLoyaltyInfo = async () => {
+      try {
+        const response = await axios.get('https://localhost:7174/api/Loyalty/get-loyalty-level?userId=7')
+        setLoyaltyInfo(response.data)
+      } catch (error) {
+        console.error('Sadakat bilgileri alınamadı:', error)
+      }
+    }
+
+    fetchLoyaltyInfo()
+  }, [])
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
+      {loyaltyInfo && (
+        <Grid container sx={{ mb: 4 }}>
+          <Grid item xs={12}>
+            <Card sx={{ background: 'linear-gradient(135deg, #EFF6FF 0%, #EEF2FF 100%)' }}>
+              <CardContent>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Box>
+                    <Typography variant="h6" sx={{ color: '#1E3A8A' }}>
+                      Seviye: {loyaltyInfo.level}
+                    </Typography>
+                    <Typography variant="body1" sx={{ color: '#2563EB', mt: 1 }}>
+                      Puanınız: {loyaltyInfo.points}
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: '#1E40AF', mt: 1 }}>
+                      Sonraki seviye için: {loyaltyInfo.nextLevelThreshold - loyaltyInfo.points} puan gerekli
+                    </Typography>
+                  </Box>
+                  <Chip label="Üye Özel" color="primary" />
+                </Box>
+              </CardContent>
+            </Card>
+          </Grid>
+        </Grid>
+      )}
+
       {/* Gallery Section */}
       <Box sx={{ mb: 4 }}>
         <Box

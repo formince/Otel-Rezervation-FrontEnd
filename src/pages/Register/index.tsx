@@ -35,50 +35,55 @@ const Register = () => {
     }
 
     try {
-      console.log('Register attempt:', { 
-        fullName: formData.fullName,
-        email: formData.email 
-      });
-
-      const response = await axios.post(`${API_BASE_URL}/Auth/register`, {
+      // Register request
+      const registerResponse = await axios.post(`${API_BASE_URL}/Auth/register`, {
         fullName: formData.fullName,
         email: formData.email,
         password: formData.password
-      });
+      })
 
-      console.log('Register response:', response.data);
+      console.log('Register response:', registerResponse.data)
 
-      // Show success message
-      toast.success('Kayıt başarılı! Lütfen giriş yapın.')
+      // Otomatik login işlemi
+      const loginResponse = await axios.post(`${API_BASE_URL}/Auth/login`, {
+        email: formData.email,
+        password: formData.password
+      })
 
-      // Redirect to login page
-      navigate('/login')
+      console.log('Auto login response:', loginResponse.data)
+
+      // Token ve rol bilgilerini kaydet
+      localStorage.setItem('token', loginResponse.data.token)
+      localStorage.setItem('role', loginResponse.data.role)
+
+      // Axios default headers'a token'ı ekle
+      axios.defaults.headers.common['Authorization'] = `Bearer ${loginResponse.data.token}`
+
+      // Login event'ini tetikle
+      window.dispatchEvent(new Event('loginStatusChanged'))
+
+      toast.success('Kayıt başarılı! Otomatik giriş yapıldı.')
+      navigate('/')
     } catch (error) {
-      // Handle registration error
       if (axios.isAxiosError(error)) {
         if (error.response) {
-          // The request was made and the server responded with a status code
-          console.error('Full error object:', error);
-          console.error('Error response data:', error.response.data);
-          console.error('Error status:', error.response.status);
+          console.error('Full error object:', error)
+          console.error('Error response data:', error.response.data)
+          console.error('Error status:', error.response.status)
           
-          // More detailed error toast
           const errorMessage = error.response.data?.message || 
-                               error.response.data?.title || 
-                               'Kayıt sırasında bir hata oluştu.';
-          toast.error(errorMessage);
+                             error.response.data?.title || 
+                             'Kayıt sırasında bir hata oluştu.'
+          toast.error(errorMessage)
         } else if (error.request) {
-          // The request was made but no response was received
-          console.error('No response received:', error.request);
+          console.error('No response received:', error.request)
           toast.error('Sunucuya bağlanılamadı. Lütfen internet bağlantınızı kontrol edin.')
         } else {
-          // Something happened in setting up the request
-          console.error('Error setting up request:', error.message);
+          console.error('Error setting up request:', error.message)
           toast.error('Kayıt sırasında bir hata oluştu.')
         }
       } else {
-        // Non-Axios error
-        console.error('Unexpected error:', error);
+        console.error('Unexpected error:', error)
         toast.error('Kayıt başarısız. Lütfen tekrar deneyin.')
       }
     } finally {
