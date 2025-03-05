@@ -34,7 +34,7 @@ const UserMenu = ({ isHomePage, isScrolled, handleLogout }: any) => {
             Profilim
           </Link>
           <Link
-            to="/reservations"
+            to="/rezervasyonlarim"
             className="block px-4 py-2 text-gray-800 hover:bg-gray-100"
             onClick={() => setIsUserMenuOpen(false)}
           >
@@ -96,7 +96,7 @@ const MobileMenu = ({ isLoggedIn, handleLogout }: any) => {
                   Profilim
                 </Link>
                 <Link
-                  to="/reservations"
+                  to="/rezervasyonlarim"
                   className="text-gray-600 hover:text-blue-600 px-4 py-2"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >

@@ -19,6 +19,7 @@ import AdminPanelFinancial from './pages/AdminPanel/FinancialOverview';
 import Contact from './pages/Contact';
 import Profile from './pages/Profile';
 import Payment from './pages/Payment';
+import Reservations from './pages/Reservations';
 
 function App() {
   console.log('App component rendered')
@@ -51,6 +52,7 @@ function App() {
             <Route path="/iletisim" element={<Contact />} />
             <Route path="/profil" element={<Profile />} />
             <Route path="/payment" element={<Payment />} />
+            <Route path="/rezervasyonlarim" element={<Reservations />} />
           </Routes>
         </Layout>} />
 
