@@ -180,6 +180,9 @@ const UserManagement: React.FC<UserManagementProps> = () => {
         console.log('Updating user with data:', formData);
         await userService.updateUser(selectedUser.userId, formData);
         showNotification('User updated successfully', 'success');
+        
+        // Kullanıcı listesini yenile
+        await fetchUsers();
       } else if (modalMode === 'add') {
         // Create new user
         console.log('Creating user with data:', formData);

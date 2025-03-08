@@ -25,6 +25,7 @@ import AdminHotelEdit from './pages/AdminPanel/EditHotel';
 import UserList from './pages/AdminPanel/UserList';
 import UserForm from './pages/AdminPanel/UserForm';
 import UserView from './pages/AdminPanel/UserView';
+import HotelAssignmentPage from './pages/AdminPanel/HotelAssignment';
 
 function App() {
   console.log('App component rendered')
@@ -75,6 +76,9 @@ function App() {
           <Route path="user-management/new" element={<UserForm />} />
           <Route path="user-management/:userId/edit" element={<UserForm />} />
           <Route path="user-management/:userId/view" element={<UserView />} />
+          
+          {/* Otel atama sayfası */}
+          <Route path="hotel-assignments" element={<HotelAssignmentPage />} />
         </Route>
       </Routes>
     </>

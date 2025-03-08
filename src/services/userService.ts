@@ -99,7 +99,7 @@ export const userService = {
   },
   
   // Kullanıcı güncelle
-  updateUser: async (userId: number, userData: Partial<UserFormData>): Promise<User> => {
+  updateUser: async (userId: number, userData: Partial<UserFormData>): Promise<User | null> => {
     try {
       // API'nin beklediği formata uygun veri hazırlama
       const apiUserData: any = {
@@ -125,7 +125,24 @@ export const userService = {
         throw new Error(`HTTP error! Status: ${response.status}, Details: ${errorText}`);
       }
       
-      return await response.json();
+      // Yanıt boş olabilir, bu durumda JSON parse etmeye çalışma
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('application/json') && response.status !== 204) {
+        try {
+          const responseText = await response.text();
+          if (responseText && responseText.trim() !== '') {
+            return JSON.parse(responseText);
+          }
+          console.log('Empty response from server, but operation was successful');
+          return null;
+        } catch (parseError) {
+          console.warn('Could not parse JSON response:', parseError);
+          return null;
+        }
+      } else {
+        console.log('Non-JSON or empty response from server, but operation was successful');
+        return null;
+      }
     } catch (error) {
       console.error('Error in updateUser:', error);
       throw error;

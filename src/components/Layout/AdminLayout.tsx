@@ -6,7 +6,8 @@ import {
   CreditCard, 
   Settings2, 
   LogOut,
-  UserCog
+  UserCog,
+  Link as LinkIcon
 } from 'lucide-react';
 
 interface AdminLayoutProps {
@@ -68,6 +69,13 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
             >
               <Building className="h-4 w-4" />
               Hotels
+            </Link>
+            <Link 
+              to="/admin/hotel-assignments" 
+              className={`flex items-center gap-2 px-4 py-2 rounded-md transition-colors ${isActive('/admin/hotel-assignments')}`}
+            >
+              <LinkIcon className="h-4 w-4" />
+              Hotel Assignments
             </Link>
             <Link 
               to="/admin/financial" 
