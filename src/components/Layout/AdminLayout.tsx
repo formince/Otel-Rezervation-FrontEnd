@@ -2,22 +2,24 @@ import React from 'react';
 import { Link, useLocation, Outlet } from 'react-router-dom';
 import { 
   LayoutGrid, 
-  Users2, 
   Building, 
   CreditCard, 
   Settings2, 
-  LogOut 
+  LogOut,
+  UserCog
 } from 'lucide-react';
 
 interface AdminLayoutProps {
-  children: React.ReactNode;
+  children?: React.ReactNode;
 }
 
 const AdminLayout = ({ children }: AdminLayoutProps) => {
   const location = useLocation();
   
   const isActive = (path: string) => {
-    return location.pathname === path ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900';
+    return location.pathname === path || location.pathname.startsWith(path + '/') 
+      ? 'bg-blue-50 text-blue-700' 
+      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900';
   };
 
   return (
@@ -54,11 +56,11 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
               Dashboard
             </Link>
             <Link 
-              to="/admin/users" 
-              className={`flex items-center gap-2 px-4 py-2 rounded-md transition-colors ${isActive('/admin/users')}`}
+              to="/admin/user-management" 
+              className={`flex items-center gap-2 px-4 py-2 rounded-md transition-colors ${isActive('/admin/user-management')}`}
             >
-              <Users2 className="h-4 w-4" />
-              Users
+              <UserCog className="h-4 w-4" />
+              User Management
             </Link>
             <Link 
               to="/admin/hotels" 
@@ -86,7 +88,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
 
         {/* Main Content */}
         <main className="flex-1 ml-64 p-6">
-          {children}
+          {children || <Outlet />}
         </main>
       </div>
     </div>

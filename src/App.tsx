@@ -6,11 +6,11 @@ import Layout from './components/Layout';
 import AdminLayout from './components/Layout/AdminLayout';
 
 import SearchResults from './pages/SearchResults';
+import Home from './pages/Home';
 import HotelDetail from './pages/HotelDetail';
 import HotelOwnerPanel from './pages/HotelOwnerPanel';
 import AddHotel from './pages/AddHotel';
 import Login from './pages/Login';
-import Home from './pages/Home';
 import Register from './pages/Register';
 import AdminPanel from './pages/AdminPanel';
 import AdminPanelUser from './pages/AdminPanel/UserManagement';
@@ -20,6 +20,11 @@ import Contact from './pages/Contact';
 import Profile from './pages/Profile';
 import Payment from './pages/Payment';
 import Reservations from './pages/Reservations';
+import AdminHotelAdd from './pages/AdminPanel/AddHotel';
+import AdminHotelEdit from './pages/AdminPanel/EditHotel';
+import UserList from './pages/AdminPanel/UserList';
+import UserForm from './pages/AdminPanel/UserForm';
+import UserView from './pages/AdminPanel/UserView';
 
 function App() {
   console.log('App component rendered')
@@ -28,9 +33,9 @@ function App() {
       <CssBaseline />
       <ToastContainer
         position="top-right"
-        autoClose={3000}
+        autoClose={5000}
         hideProgressBar={false}
-        newestOnTop
+        newestOnTop={false}
         closeOnClick
         rtl={false}
         pauseOnFocusLoss
@@ -57,15 +62,20 @@ function App() {
         </Layout>} />
 
         {/* Admin Layout for admin routes */}
-        <Route path="/admin/*" element={<AdminLayout>
-          <Routes>
-            <Route path="/" element={<AdminPanel />} />
-            <Route path="/users" element={<AdminPanelUser />} />
-            <Route path="/hotels" element={<AdminPanelHotel />} />
-            <Route path="/financial" element={<AdminPanelFinancial />} />
-            <Route path="/settings" element={<AdminPanel />} />
-          </Routes>
-        </AdminLayout>} />
+        <Route path="/admin/*" element={<AdminLayout />}>
+          <Route path="" element={<AdminPanel />} />
+          <Route path="hotels" element={<AdminPanelHotel />} />
+          <Route path="add-hotel" element={<AdminHotelAdd />} />
+          <Route path="edit-hotel/:id" element={<AdminHotelEdit />} />
+          <Route path="financial" element={<AdminPanelFinancial />} />
+          <Route path="settings" element={<AdminPanel />} />
+          
+          {/* Kullanıcı yönetimi sayfaları */}
+          <Route path="user-management" element={<UserList />} />
+          <Route path="user-management/new" element={<UserForm />} />
+          <Route path="user-management/:userId/edit" element={<UserForm />} />
+          <Route path="user-management/:userId/view" element={<UserView />} />
+        </Route>
       </Routes>
     </>
   )
