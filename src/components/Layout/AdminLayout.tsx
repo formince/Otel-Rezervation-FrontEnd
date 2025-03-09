@@ -1,13 +1,13 @@
 import React from 'react';
 import { Link, useLocation, Outlet } from 'react-router-dom';
 import { 
-  LayoutGrid, 
   Building, 
   CreditCard, 
   Settings2, 
   LogOut,
   UserCog,
-  Link as LinkIcon
+  Link as LinkIcon,
+  BarChart
 } from 'lucide-react';
 
 interface AdminLayoutProps {
@@ -18,7 +18,16 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
   const location = useLocation();
   
   const isActive = (path: string) => {
-    return location.pathname === path || location.pathname.startsWith(path + '/') 
+    // Ana sayfa için özel kontrol
+    if (path === '/admin') {
+      return location.pathname === '/admin' || location.pathname === '/admin/'
+        ? 'bg-blue-50 text-blue-700' 
+        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900';
+    }
+    
+    // Diğer sayfalar için tam eşleşme veya alt sayfa kontrolü
+    return location.pathname === path || 
+           (location.pathname.startsWith(path + '/') && path !== '/admin')
       ? 'bg-blue-50 text-blue-700' 
       : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900';
   };
@@ -53,8 +62,8 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
               to="/admin" 
               className={`flex items-center gap-2 px-4 py-2 rounded-md transition-colors ${isActive('/admin')}`}
             >
-              <LayoutGrid className="h-4 w-4" />
-              Dashboard
+              <BarChart className="h-4 w-4" />
+              İstatistikler
             </Link>
             <Link 
               to="/admin/user-management" 

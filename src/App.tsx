@@ -26,6 +26,7 @@ import UserList from './pages/AdminPanel/UserList';
 import UserForm from './pages/AdminPanel/UserForm';
 import UserView from './pages/AdminPanel/UserView';
 import HotelAssignmentPage from './pages/AdminPanel/HotelAssignment';
+import Statistics from './pages/AdminPanel/Statistics';
 
 function App() {
   console.log('App component rendered')
@@ -64,12 +65,16 @@ function App() {
 
         {/* Admin Layout for admin routes */}
         <Route path="/admin/*" element={<AdminLayout />}>
-          <Route path="" element={<AdminPanel />} />
+          {/* Ana sayfa olarak istatistik sayfasını göster */}
+          <Route path="" element={<Statistics />} />
           <Route path="hotels" element={<AdminPanelHotel />} />
           <Route path="add-hotel" element={<AdminHotelAdd />} />
           <Route path="edit-hotel/:id" element={<AdminHotelEdit />} />
           <Route path="financial" element={<AdminPanelFinancial />} />
           <Route path="settings" element={<AdminPanel />} />
+          
+          {/* İstatistikler sayfası */}
+          <Route path="statistics" element={<Statistics />} />
           
           {/* Kullanıcı yönetimi sayfaları */}
           <Route path="user-management" element={<UserList />} />
